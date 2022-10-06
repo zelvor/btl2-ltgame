@@ -153,7 +153,7 @@ class CollisionManager:
 # ---------
 # CONSTANTS
 # ---------
-WIDTH, HEIGHT = 1280, 720
+WIDTH, HEIGHT = 1600, 900
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
@@ -185,7 +185,8 @@ draw_board()
 # -------
 paddle1 = Paddle( screen, RED, 15, HEIGHT//2 - 60, 20, 120 )
 paddle3 = Paddle( screen, WHITE, 255, HEIGHT//2 - 60, 20, 120 )
-paddle2 = Paddle( screen, WHITE, WIDTH - 20 - 15, HEIGHT//2 - 60, 20, 120 )
+paddle2 = Paddle( screen, RED, WIDTH - 20 - 15, HEIGHT//2 - 60, 20, 120 )
+paddle4 = Paddle( screen, WHITE, WIDTH - 20 - 255, HEIGHT//2 - 60, 20, 120 )
 ball = Ball( screen, WHITE, WIDTH//2, HEIGHT//2, 15 )
 collision = CollisionManager()
 score1 = PlayerScore( screen, '0', WIDTH//4, 15 )
@@ -200,6 +201,11 @@ clock = pygame.time.Clock()
 # --------
 # MAINLOOP
 # --------
+global p1
+p1 = paddle1
+global p2
+p2 = paddle2
+
 while True:
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
@@ -214,6 +220,7 @@ while True:
 				restart()
 				playing = False
 
+		
 			#if press shift, p1 is paddle3
 			if event.key == pygame.K_LSHIFT:
 				if paddle1.color == RED:
@@ -224,6 +231,18 @@ while True:
 					p1 = paddle1
 					paddle1.color = RED
 					paddle3.color = WHITE
+			
+			if event.key == pygame.K_RSHIFT:
+				if paddle2.color == RED:
+					p2 = paddle4
+					paddle2.color = WHITE
+					paddle4.color = RED
+				elif paddle2.color == WHITE:
+					p2 = paddle2
+					paddle2.color = RED
+					paddle4.color = WHITE
+
+			
 
 			if event.key == pygame.K_w:
 				p1.state = 'up'
@@ -238,15 +257,22 @@ while True:
 				p1.state = 'right'
 
 			if event.key == pygame.K_UP:
-				paddle2.state = 'up'
+				p2.state = 'up'
 
 			if event.key == pygame.K_DOWN:
-				paddle2.state = 'down'
+				p2.state = 'down'
+
+			if event.key == pygame.K_LEFT:
+				p2.state = 'left'
+			
+			if event.key == pygame.K_RIGHT:
+				p2.state = 'right'
 
 		if event.type == pygame.KEYUP:
 			paddle1.state = 'stopped'
 			paddle2.state = 'stopped'
 			paddle3.state = 'stopped'
+			paddle4.state = 'stopped'
 
 	if playing:
 		draw_board()
@@ -269,6 +295,11 @@ while True:
 		paddle3.move()
 		paddle3.clamp()
 		paddle3.draw()
+
+		# paddle 4
+		paddle4.move()
+		paddle4.clamp()
+		paddle4.draw()
 
 		# wall collision
 		if collision.between_ball_and_walls(ball):
