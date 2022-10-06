@@ -183,7 +183,8 @@ draw_board()
 # -------
 # OBJECTS
 # -------
-paddle1 = Paddle( screen, WHITE, 15, HEIGHT//2 - 60, 20, 120 )
+paddle1 = Paddle( screen, RED, 15, HEIGHT//2 - 60, 20, 120 )
+paddle3 = Paddle( screen, WHITE, 255, HEIGHT//2 - 60, 20, 120 )
 paddle2 = Paddle( screen, WHITE, WIDTH - 20 - 15, HEIGHT//2 - 60, 20, 120 )
 ball = Ball( screen, WHITE, WIDTH//2, HEIGHT//2, 15 )
 collision = CollisionManager()
@@ -213,17 +214,28 @@ while True:
 				restart()
 				playing = False
 
+			#if press shift, p1 is paddle3
+			if event.key == pygame.K_LSHIFT:
+				if paddle1.color == RED:
+					p1 = paddle3
+					paddle1.color = WHITE
+					paddle3.color = RED
+				elif paddle1.color == WHITE:
+					p1 = paddle1
+					paddle1.color = RED
+					paddle3.color = WHITE
+
 			if event.key == pygame.K_w:
-				paddle1.state = 'up'
+				p1.state = 'up'
 
 			if event.key == pygame.K_s:
-				paddle1.state = 'down'
+				p1.state = 'down'
 			
 			if event.key == pygame.K_a:
-				paddle1.state = 'left'
+				p1.state = 'left'
 
 			if event.key == pygame.K_d:
-				paddle1.state = 'right'
+				p1.state = 'right'
 
 			if event.key == pygame.K_UP:
 				paddle2.state = 'up'
@@ -234,6 +246,7 @@ while True:
 		if event.type == pygame.KEYUP:
 			paddle1.state = 'stopped'
 			paddle2.state = 'stopped'
+			paddle3.state = 'stopped'
 
 	if playing:
 		draw_board()
@@ -252,6 +265,11 @@ while True:
 		paddle2.clamp()
 		paddle2.draw()
 
+		# paddle 3
+		paddle3.move()
+		paddle3.clamp()
+		paddle3.draw()
+
 		# wall collision
 		if collision.between_ball_and_walls(ball):
 			print('WALL COLLISION')
@@ -267,23 +285,25 @@ while True:
 			print('COLLISION WITH PADDLE 2')
 			ball.paddle_collision()
 
-		# GOAL OF PLAYER 1 !
-		if collision.between_ball_and_goal2(ball):
-			draw_board()
-			score1.increase()
-			ball.restart_pos()
-			paddle1.restart_pos()
-			paddle2.restart_pos()
-			playing = False
+		# # GOAL OF PLAYER 1 !
+		# if collision.between_ball_and_goal2(ball):
+		# 	draw_board()
+		# 	score1.increase()
+		# 	ball.restart_pos()
+		# 	paddle1.restart_pos()
+		# 	paddle2.restart_pos()
+		# 	paddle3.restart_pos()
+		# 	playing = False
 
-		# GOAL OF PLAYER 2!
-		if collision.between_ball_and_goal1(ball):
-			draw_board()
-			score2.increase()
-			ball.restart_pos()
-			paddle1.restart_pos()
-			paddle2.restart_pos()
-			playing = False
+		# # GOAL OF PLAYER 2!
+		# if collision.between_ball_and_goal1(ball):
+		# 	draw_board()
+		# 	score2.increase()
+		# 	ball.restart_pos()
+		# 	paddle1.restart_pos()
+		# 	paddle2.restart_pos()
+		# 	paddle3.restart_pos()
+		# 	playing = False
 
 	score1.show()
 	score2.show()
