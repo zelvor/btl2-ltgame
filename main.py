@@ -4,6 +4,7 @@ WIDTH, HEIGHT = 1600, 900
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
+BLUE = (0, 255, 0)
 
                 
 class Paddle:
@@ -21,13 +22,13 @@ class Paddle:
 		pygame.draw.rect( self.screen, self.color, (self.posX, self.posY, self.width, self.height) )
 
 	def move(self):
-		if self.state == 'up':
+		if self.state == 'up' and self.posY > 14:
 			self.posY -= 15
-		elif self.state == 'down':
+		elif self.state == 'down' and self.posY < 875:
 			self.posY += 15
-		elif self.state == 'left':
+		elif self.state == 'left' and self.posX > 14:
 			self.posX -= 15
-		elif self.state == 'right':
+		elif self.state == 'right'and self.posX < 1575:
 			self.posX += 15
 
 	def clamp(self):
@@ -58,8 +59,8 @@ class Ball:
 
 	def start(self):
 		# this will be random
-		self.dx = 15
-		self.dy = 5
+		self.dx = random.randrange(-10, 10)
+		self.dy = random.randrange(-10, 10)
 
 	def move(self):
 		self.posX += self.dx
@@ -104,7 +105,9 @@ class PlayerScore:
 class CollisionManager:
         def ball_and_left_right(self, ball):
                if(ball.posX < 0 or ball.posX > 1600):
-                       ball.dx = -ball.dx;
+                        ball.dx = -ball.dx
+                        if(ball.posY >= 300 and ball.posY <= 600):
+                                return 1
 
         def between_ball_and_paddle1(self, ball, paddle):
                 ballX = ball.posX
@@ -161,33 +164,42 @@ class CollisionManager:
 class MordenPong():
         def __init__(self):
                 self.screen = pygame.display.set_mode((1600, 900))
-                
+                self.score1 = PlayerScore( self.screen, '0', WIDTH//4, 15 )
+                self.score2 = PlayerScore( self.screen, '0', WIDTH - WIDTH//4, 15 )
+                self.ball = Ball( self.screen, WHITE, WIDTH//2, HEIGHT//2, 15 )
+                self.collision = CollisionManager()
+                self.paddle1 = Paddle( self.screen, RED, 15, HEIGHT//2 - 60, 20, 120 )
+                self.paddle3 = Paddle( self.screen, WHITE, 255, HEIGHT//2 - 60, 20, 120 )
+                self.paddle2 = Paddle( self.screen, RED, WIDTH - 20 - 15, HEIGHT//2 - 60, 20, 120 )
+                self.paddle4 = Paddle( self.screen, WHITE, WIDTH - 20 - 255, HEIGHT//2 - 60, 20, 120 )
+
         def draw_board(self):
                 self.screen.fill( BLACK )
                 pygame.draw.line( self.screen, WHITE, (WIDTH//2, 0), (WIDTH//2, HEIGHT), 5 )
+                pygame.draw.line( self.screen, BLUE, (1, 300), (1, 600), 10 )
+                pygame.draw.line( self.screen, BLUE, (WIDTH-1, 300), (WIDTH-1, 600), 10 )
 
         def restart(self):
                 self.draw_board()
-                score1.restart()
-                score2.restart()
-                ball.restart_pos()
-                paddle1.restart_pos()
-                paddle2.restart_pos()
+                self.score1.restart()
+                self.score2.restart()
+                self.ball.restart_pos()
+                self.paddle1.restart_pos()
+                self.paddle2.restart_pos()
+                self.paddle3.restart_pos()
+                self.paddle4.restart_pos()
                 
         def start(self):
-                self.draw_board()
+                self.restart()
 
                 # -------
                 # OBJECTS
                 # -------
-                paddle1 = Paddle( self.screen, RED, 15, HEIGHT//2 - 60, 20, 120 )
-                paddle3 = Paddle( self.screen, WHITE, 255, HEIGHT//2 - 60, 20, 120 )
-                paddle2 = Paddle( self.screen, RED, WIDTH - 20 - 15, HEIGHT//2 - 60, 20, 120 )
-                paddle4 = Paddle( self.screen, WHITE, WIDTH - 20 - 255, HEIGHT//2 - 60, 20, 120 )
-                ball = Ball( self.screen, WHITE, WIDTH//2, HEIGHT//2, 15 )
-                collision = CollisionManager()
-                score1 = PlayerScore( self.screen, '0', WIDTH//4, 15 )
-                score2 = PlayerScore( self.screen, '0', WIDTH - WIDTH//4, 15 )
+
+                # ball = Ball( self.screen, WHITE, WIDTH//2, HEIGHT//2, 15 )
+                # collision = CollisionManager()
+                # score1 = PlayerScore( self.screen, '0', WIDTH//4, 15 )
+                # score2 = PlayerScore( self.screen, '0', WIDTH - WIDTH//4, 15 )
 
                 # ---------
                 # VARIABLES
@@ -199,9 +211,9 @@ class MordenPong():
                 # MAINLOOP
                 # --------
                 global p1
-                p1 = paddle1
+                p1 = self.paddle1
                 global p2
-                p2 = paddle2
+                p2 = self.paddle2
 
                 while True:
                         for event in pygame.event.get():
@@ -210,34 +222,34 @@ class MordenPong():
 
                                 if event.type == pygame.KEYDOWN:
                                         if event.key == pygame.K_p and not playing:
-                                                ball.start()
+                                                self.ball.start()
                                                 playing = True
 
                                         if event.key == pygame.K_r and playing:
-                                                restart()
+                                                self.restart()
                                                 playing = False
 
                                 
-                                        #if press shift, p1 is paddle3
+                                        #if press shift, p1 is self.paddle3
                                         if event.key == pygame.K_LSHIFT:
-                                                if paddle1.color == RED:
-                                                        p1 = paddle3
-                                                        paddle1.color = WHITE
-                                                        paddle3.color = RED
-                                                elif paddle1.color == WHITE:
-                                                        p1 = paddle1
-                                                        paddle1.color = RED
-                                                        paddle3.color = WHITE
+                                                if self.paddle1.color == RED:
+                                                        p1 = self.paddle3
+                                                        self.paddle1.color = WHITE
+                                                        self.paddle3.color = RED
+                                                elif self.paddle1.color == WHITE:
+                                                        p1 = self.paddle1
+                                                        self.paddle1.color = RED
+                                                        self.paddle3.color = WHITE
                                         
                                         if event.key == pygame.K_RSHIFT:
-                                                if paddle2.color == RED:
-                                                        p2 = paddle4
-                                                        paddle2.color = WHITE
-                                                        paddle4.color = RED
-                                                elif paddle2.color == WHITE:
-                                                        p2 = paddle2
-                                                        paddle2.color = RED
-                                                        paddle4.color = WHITE
+                                                if self.paddle2.color == RED:
+                                                        p2 = self.paddle4
+                                                        self.paddle2.color = WHITE
+                                                        self.paddle4.color = RED
+                                                elif self.paddle2.color == WHITE:
+                                                        p2 = self.paddle2
+                                                        self.paddle2.color = RED
+                                                        self.paddle4.color = WHITE
 
                                         
 
@@ -266,51 +278,52 @@ class MordenPong():
                                                 p2.state = 'right'
 
                                 if event.type == pygame.KEYUP:
-                                        paddle1.state = 'stopped'
-                                        paddle2.state = 'stopped'
-                                        paddle3.state = 'stopped'
-                                        paddle4.state = 'stopped'
+                                        self.paddle1.state = 'stopped'
+                                        self.paddle2.state = 'stopped'
+                                        self.paddle3.state = 'stopped'
+                                        self.paddle4.state = 'stopped'
 
                         if playing:
                                 self.draw_board()
 
-                                # ball
-                                ball.move()
-                                ball.draw()
+                                # self.ball
+                                self.ball.move()
+                                self.ball.draw()
 
                                 # paddle 1
-                                paddle1.move()
-                                paddle1.clamp()
-                                paddle1.draw()
+                                self.paddle1.move()
+                                self.paddle1.clamp()
+                                self.paddle1.draw()
 
                                 # paddle 2
-                                paddle2.move()
-                                paddle2.clamp()
-                                paddle2.draw()
+                                self.paddle2.move()
+                                self.paddle2.clamp()
+                                self.paddle2.draw()
 
                                 # paddle 3
-                                paddle3.move()
-                                paddle3.clamp()
-                                paddle3.draw()
+                                self.paddle3.move()
+                                self.paddle3.clamp()
+                                self.paddle3.draw()
 
                                 # paddle 4
-                                paddle4.move()
-                                paddle4.clamp()
-                                paddle4.draw()
+                                self.paddle4.move()
+                                self.paddle4.clamp()
+                                self.paddle4.draw()
 
                                 # wall collision
-                                if collision.between_ball_and_walls(ball):
+                                if self.collision.between_ball_and_walls(self.ball):
                                         print('WALL COLLISION')
-                                        ball.wall_collision()
+                                        self.ball.wall_collision()
 
-                                collision.ball_and_left_right(ball)
-                                # paddle1 collision
-                                #if collision.between_ball_and_paddle1(ball, paddle1):
+                                if self.collision.ball_and_left_right(self.ball) == 1:
+                                        self.start()
+                                # self.paddle1 collision
+                                #if collision.between_ball_and_self.paddle1(ball, self.paddle1):
                                  #       print('COLLISION WITH PADDLE 1')
                                   #      ball.paddle_collision()
 
-                                # paddle2 collision
-                                #if collision.between_ball_and_paddle2(ball, paddle2):
+                                # self.paddle2 collision
+                                #if collision.between_ball_and_self.paddle2(ball, self.paddle2):
                                  #       print('COLLISION WITH PADDLE 2')
                                   #      ball.paddle_collision()
 
@@ -319,9 +332,9 @@ class MordenPong():
                                 # 	self.draw_board()
                                 # 	score1.increase()
                                 # 	ball.restart_pos()
-                                # 	paddle1.restart_pos()
-                                # 	paddle2.restart_pos()
-                                # 	paddle3.restart_pos()
+                                # 	self.paddle1.restart_pos()
+                                # 	self.paddle2.restart_pos()
+                                # 	self.paddle3.restart_pos()
                                 # 	playing = False
 
                                 # # GOAL OF PLAYER 2!
@@ -329,13 +342,13 @@ class MordenPong():
                                 # 	self.draw_board()
                                 # 	score2.increase()
                                 # 	ball.restart_pos()
-                                # 	paddle1.restart_pos()
-                                # 	paddle2.restart_pos()
-                                # 	paddle3.restart_pos()
+                                # 	self.paddle1.restart_pos()
+                                # 	self.paddle2.restart_pos()
+                                # 	self.paddle3.restart_pos()
                                 # 	playing = False
 
-                        score1.show()
-                        score2.show()
+                        self.score1.show()
+                        self.score2.show()
 
                         clock.tick(60)
                         pygame.display.update()
