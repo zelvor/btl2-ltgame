@@ -23,13 +23,13 @@ class Paddle:
 
 	def move(self):
 		if self.state == 'up' and self.posY > 14:
-			self.posY -= 15
+			self.posY -= 8
 		elif self.state == 'down' and self.posY < 875:
-			self.posY += 15
+			self.posY += 8
 		elif self.state == 'left' and self.posX > 14:
-			self.posX -= 15
+			self.posX -= 8
 		elif self.state == 'right'and self.posX < 1575:
-			self.posX += 15
+			self.posX += 8
 
 	def clamp(self):
 		if self.posY <= 0:
@@ -59,12 +59,18 @@ class Ball:
 
 	def start(self):
 		# this will be random
-		self.dx = random.randrange(-10, 10)
-		self.dy = random.randrange(-10, 10)
+		self.dx = random.randint(6,8) * random.choice([1,-1])
+		self.dy = random.randint(2,3) * random.choice([1,-1])
 
 	def move(self):
 		self.posX += self.dx
 		self.posY += self.dy
+        
+	def windy(self):
+		self.dx *= 1.2
+		self.dy *= 1.2
+		self.dx += random.randrange(2, 3) * random.choice([1,-1])
+		self.dy += random.randrange(3, 4) * random.choice([1,-1])
 
 	def wall_collision(self):
 		self.dy = -self.dy
@@ -72,7 +78,9 @@ class Ball:
                 
 	def paddle_collision(self):
 		self.dx = -self.dx
-		print('BOUNCE')                 
+		self.posX += self.dx
+		print('BOUNCE')
+
 	def restart_pos(self):
 		self.posX = WIDTH//2
 		self.posY = HEIGHT//2
@@ -117,7 +125,7 @@ class CollisionManager:
                 # y is in collision area?
                 if ballY + ball.radius > paddleY and ballY - ball.radius < paddleY + paddle.height:
                         # x is in collision area?
-                        if ballX - ball.radius <= paddleX + paddle.width:
+                        if ballX + ball.radius > paddleX and ballX - ball.radius <= paddleX + paddle.width:
                                 return True
 
 		# no collision
@@ -132,7 +140,7 @@ class CollisionManager:
 		# y is in collision?
                 if ballY + ball.radius > paddleY and ballY - ball.radius < paddleY + paddle.height:
                         # x is in collision?
-                        if ballX + ball.radius >= paddleX:
+                        if ballX + ball.radius > paddleX and ballX - ball.radius <= paddleX + paddle.width:
                                 # collision
                                 return True
 
@@ -168,10 +176,10 @@ class MordenPong():
                 self.score2 = PlayerScore( self.screen, '0', WIDTH - WIDTH//4, 15 )
                 self.ball = Ball( self.screen, WHITE, WIDTH//2, HEIGHT//2, 15 )
                 self.collision = CollisionManager()
-                self.paddle1 = Paddle( self.screen, RED, 15, HEIGHT//2 - 60, 20, 120 )
-                self.paddle3 = Paddle( self.screen, WHITE, 255, HEIGHT//2 - 60, 20, 120 )
-                self.paddle2 = Paddle( self.screen, RED, WIDTH - 20 - 15, HEIGHT//2 - 60, 20, 120 )
-                self.paddle4 = Paddle( self.screen, WHITE, WIDTH - 20 - 255, HEIGHT//2 - 60, 20, 120 )
+                self.paddle1 = Paddle( self.screen, RED, 15, HEIGHT//2 - 60, 10, 120 )
+                self.paddle3 = Paddle( self.screen, WHITE, 255, HEIGHT//2 - 60, 10, 120 )
+                self.paddle2 = Paddle( self.screen, RED, WIDTH - 20 - 15, HEIGHT//2 - 60, 10, 120 )
+                self.paddle4 = Paddle( self.screen, WHITE, WIDTH - 20 - 255, HEIGHT//2 - 60, 10, 120 )
 
         def draw_board(self):
                 self.screen.fill( BLACK )
@@ -204,9 +212,11 @@ class MordenPong():
                 # ---------
                 # VARIABLES
                 # ---------
+                cycle_time = 0
+                count = 0
                 playing = False
                 clock = pygame.time.Clock()
-
+                start_ticks=0
                 # --------
                 # MAINLOOP
                 # --------
@@ -224,6 +234,7 @@ class MordenPong():
                                         if event.key == pygame.K_p and not playing:
                                                 self.ball.start()
                                                 playing = True
+                                                start_ticks = pygame.time.get_ticks() #starter tick
 
                                         if event.key == pygame.K_r and playing:
                                                 self.restart()
@@ -318,14 +329,14 @@ class MordenPong():
                                 if self.collision.ball_and_left_right(self.ball) == 1:
                                         self.start()
                                 # self.paddle1 collision
-                                #if collision.between_ball_and_self.paddle1(ball, self.paddle1):
-                                 #       print('COLLISION WITH PADDLE 1')
-                                  #      ball.paddle_collision()
+                                if self.collision.between_ball_and_paddle1(self.ball, self.paddle1):
+                                       print('COLLISION WITH PADDLE 1')
+                                       self.ball.paddle_collision()
 
                                 # self.paddle2 collision
-                                #if collision.between_ball_and_self.paddle2(ball, self.paddle2):
-                                 #       print('COLLISION WITH PADDLE 2')
-                                  #      ball.paddle_collision()
+                                if self.collision.between_ball_and_paddle2(self.ball, self.paddle2):
+                                       print('COLLISION WITH PADDLE 2')
+                                       self.ball.paddle_collision()
 
                                 # # GOAL OF PLAYER 1 !
                                 # if collision.between_ball_and_goal2(ball):
@@ -347,6 +358,14 @@ class MordenPong():
                                 # 	self.paddle3.restart_pos()
                                 # 	playing = False
 
+                                cycle = (pygame.time.get_ticks() - start_ticks) % 5000
+                                # sec = mil / 1000.0
+                                # cycle_time += sec
+                                # count = count + mil
+                                if cycle < 10:
+                                        # count = 0
+                                        self.ball.windy()
+                        self.time = 0
                         self.score1.show()
                         self.score2.show()
 
