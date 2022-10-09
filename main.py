@@ -1,4 +1,4 @@
-import pygame, sys, random
+import pygame, sys, random, math
 
 WIDTH, HEIGHT = 1600, 900
 BLACK = (0, 0, 0)
@@ -67,19 +67,23 @@ class Ball:
 		self.posY += self.dy
         
 	def windy(self):
-		self.dx *= 1.2
-		self.dy *= 1.2
-		self.dx += random.randrange(2, 3) * random.choice([1,-1])
-		self.dy += random.randrange(3, 4) * random.choice([1,-1])
+		self.dx *= 1.3
+		self.dy *= random.choice([0.6, 0.8, 1.4 , 2, 2.5])
+		self.dy += self.dy/abs(self.dy)*2
+		print(self.dx)
+		print(self.dy)
+		# self.dy += random.randrange(3, 4) * random.choice([1,-1])
+		# if(self.dy < 3 and self.dy > -3):
+		# 	self.dy += random.randrange(3, 4) * random.choice([1,-1])
+		# if(self.dx < 3 and self.dx > -3):
+		# 	self.dx += random.randrange(6, 8) * random.choice([1,-1])
 
 	def wall_collision(self):
 		self.dy = -self.dy
-		print('BOUNCE')
                 
 	def paddle_collision(self):
 		self.dx = -self.dx
 		self.posX += self.dx
-		print('BOUNCE')
 
 	def restart_pos(self):
 		self.posX = WIDTH//2
@@ -111,13 +115,18 @@ class PlayerScore:
 		self.label = self.font.render(self.points, 0, WHITE)
 
 class CollisionManager:
-        def ball_and_left_right(self, ball):
-               if(ball.posX < 0 or ball.posX > 1600):
+        def ball_and_left_right(self, ball, score1, score2):
+                if(ball.posX < 0 or ball.posX > 1600):
                         ball.dx = -ball.dx
-                        if(ball.posY >= 300 and ball.posY <= 600):
+                        if(ball.posY >= 300 and ball.posY <= 600 and ball.posX < 0):
+                                score2.increase()
                                 return 1
+                        if(ball.posY >= 300 and ball.posY <= 600 and ball.posX > 1600):
+                                score1.increase()
+                                return 2
+                return 0
 
-        def between_ball_and_paddle1(self, ball, paddle):
+        def between_ball_and_paddle(self, ball, paddle):
                 ballX = ball.posX
                 ballY = ball.posY
                 paddleX = paddle.posX
@@ -131,23 +140,7 @@ class CollisionManager:
 		# no collision
                 return False
 
-        def between_ball_and_paddle2(self, ball, paddle):
-                ballX = ball.posX
-                ballY = ball.posY
-                paddleX = paddle.posX
-                paddleY = paddle.posY
-
-		# y is in collision?
-                if ballY + ball.radius > paddleY and ballY - ball.radius < paddleY + paddle.height:
-                        # x is in collision?
-                        if ballX + ball.radius > paddleX and ballX - ball.radius <= paddleX + paddle.width:
-                                # collision
-                                return True
-
-		# no collision
-                return False
-
-        def between_ball_and_walls(self, ball):
+        def between_ball_and_up_down(self, ball):
                 ballY = ball.posY
 
 		# top collision
@@ -189,8 +182,8 @@ class MordenPong():
 
         def restart(self):
                 self.draw_board()
-                self.score1.restart()
-                self.score2.restart()
+                # self.score1.restart()
+                # self.score2.restart()
                 self.ball.restart_pos()
                 self.paddle1.restart_pos()
                 self.paddle2.restart_pos()
@@ -322,20 +315,23 @@ class MordenPong():
                                 self.paddle4.draw()
 
                                 # wall collision
-                                if self.collision.between_ball_and_walls(self.ball):
-                                        print('WALL COLLISION')
+                                if self.collision.between_ball_and_up_down(self.ball):
                                         self.ball.wall_collision()
 
-                                if self.collision.ball_and_left_right(self.ball) == 1:
+                                if self.collision.ball_and_left_right(self.ball, self.score1, self.score2) != 0:
                                         self.start()
                                 # self.paddle1 collision
-                                if self.collision.between_ball_and_paddle1(self.ball, self.paddle1):
-                                       print('COLLISION WITH PADDLE 1')
+                                if self.collision.between_ball_and_paddle(self.ball, self.paddle1):
                                        self.ball.paddle_collision()
 
                                 # self.paddle2 collision
-                                if self.collision.between_ball_and_paddle2(self.ball, self.paddle2):
-                                       print('COLLISION WITH PADDLE 2')
+                                if self.collision.between_ball_and_paddle(self.ball, self.paddle2):
+                                       self.ball.paddle_collision()
+
+                                if self.collision.between_ball_and_paddle(self.ball, self.paddle3):
+                                       self.ball.paddle_collision()
+
+                                if self.collision.between_ball_and_paddle(self.ball, self.paddle4):
                                        self.ball.paddle_collision()
 
                                 # # GOAL OF PLAYER 1 !
@@ -438,5 +434,5 @@ def main_menu():
 
 if __name__ == "__main__":
     global dif
-    dif = 1
+    dif = 1     #dif = 1 -> vs com
     main_menu()
