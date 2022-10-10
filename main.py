@@ -72,6 +72,8 @@ class Ball:
 		self.dy += self.dy/abs(self.dy)*2
 		print(self.dx)
 		print(self.dy)
+		if self.dy > 25 or self.dy < -25:
+			self.dy = random.choice([8,-8])
 		# self.dy += random.randrange(3, 4) * random.choice([1,-1])
 		# if(self.dy < 3 and self.dy > -3):
 		# 	self.dy += random.randrange(3, 4) * random.choice([1,-1])
@@ -191,8 +193,9 @@ class MordenPong():
                 self.paddle4.restart_pos()
                 
         def start(self):
+                global dif
                 self.restart()
-
+                
                 # -------
                 # OBJECTS
                 # -------
@@ -268,24 +271,39 @@ class MordenPong():
 
                                         if event.key == pygame.K_d:
                                                 p1.state = 'right'
+                                        if (dif == 2):
+                                                if event.key == pygame.K_UP:
+                                                        p2.state = 'up'
 
-                                        if event.key == pygame.K_UP:
-                                                p2.state = 'up'
+                                                if event.key == pygame.K_DOWN:
+                                                        p2.state = 'down'
 
-                                        if event.key == pygame.K_DOWN:
-                                                p2.state = 'down'
-
-                                        if event.key == pygame.K_LEFT:
-                                                p2.state = 'left'
-                                        
-                                        if event.key == pygame.K_RIGHT:
-                                                p2.state = 'right'
+                                                if event.key == pygame.K_LEFT:
+                                                        p2.state = 'left'
+                                                
+                                                if event.key == pygame.K_RIGHT:
+                                                        p2.state = 'right'
 
                                 if event.type == pygame.KEYUP:
                                         self.paddle1.state = 'stopped'
-                                        self.paddle2.state = 'stopped'
                                         self.paddle3.state = 'stopped'
-                                        self.paddle4.state = 'stopped'
+                                        if (dif == 2):
+                                                self.paddle2.state = 'stopped'
+                                                self.paddle4.state = 'stopped'
+                        if (dif == 1):
+                                if(p2.posY > self.ball.posY and p2.posX > self.ball.posX):
+                                        p2.state = 'up'
+                                if(p2.posY + p2.height < self.ball.posY and p2.posX > self.ball.posX):
+                                        p2.state = 'down'
+                                if(random.randint(1, 100) == 2 or p2.posX < self.ball.posX):
+                                        if self.paddle2.color == RED:
+                                                p2 = self.paddle4
+                                                self.paddle2.color = WHITE
+                                                self.paddle4.color = RED
+                                        elif self.paddle2.color == WHITE:
+                                                p2 = self.paddle2
+                                                self.paddle2.color = RED
+                                                self.paddle4.color = WHITE
 
                         if playing:
                                 self.draw_board()
@@ -364,7 +382,9 @@ class MordenPong():
                         self.time = 0
                         self.score1.show()
                         self.score2.show()
-
+                        if (dif == 1):
+                                self.paddle2.state = 'stopped'
+                                self.paddle4.state = 'stopped'
                         clock.tick(60)
                         pygame.display.update()
 
